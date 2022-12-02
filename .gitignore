@@ -20,7 +20,7 @@ goorm.manifest
 *.db-journal
 
 robots.txt
-custom.py
+# custom.py
 404.html
 
 views/liberty
