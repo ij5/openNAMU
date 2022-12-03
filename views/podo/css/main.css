@@ -357,7 +357,7 @@ body {
   color: black;
   }
 
-.opennamu_ul {
+#opennamu_simple_render > .opennamu_ul {
     box-sizing: border-box;
     border: 1px solid #e3e9ed;
     border-radius: 10px;
@@ -365,7 +365,7 @@ body {
     box-shadow: 1px 1px 10px 0 rgb(72 75 108/8%);
 }
 
-.opennamu_ul > li {
+#opennamu_simple_render > .opennamu_ul > li {
     padding: 10px;
     margin: 5px;
     text-decoration: none;
