@@ -547,7 +547,11 @@ class class_do_render_namumark:
 
                 return '<' + data_name + '></' + data_name + '>'
             elif name_data == 'pagecount':
-                return '0'
+                self.curs.execute(db_change("SELECT count(DISTINCT title) from history"))
+                count_data = self.curs.fetchall()
+                if not count_data:
+                    return '0'
+                return str(count_data[0][0])
             else:
                 return '<macro>' + match[0] + '(' + match[1] + ')' + '</macro>'
 
@@ -576,7 +580,11 @@ class class_do_render_namumark:
             elif match in ('목차', 'toc', 'tableofcontents'):
                 return '<toc_need_part>'
             elif match == 'pagecount':
-                return '0'
+                self.curs.execute(db_change("SELECT count(DISTINCT title) from history"))
+                count_data = self.curs.fetchall()
+                if not count_data:
+                    return '0'
+                return str(count_data[0][0])
             else:
                 return '<macro>' + match_org.group(1) + '</macro>'
 
