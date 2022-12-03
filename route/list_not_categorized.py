@@ -12,6 +12,8 @@ def list_not_categorized():
 
         curs.execute(db_change('SELECT DISTINCT title FROM history WHERE title NOT LIKE "category:%" AND title NOT IN (SELECT link FROM back WHERE type = "cat") limit 50'))
         for data in curs.fetchall():
+            if not data[0]:
+                continue
             div += '<li>' + '<a href="/w/' + url_pas(data[0]) + '">' + html.escape(data[0]) + '</a></li>'
 
         div += '</ul>'
