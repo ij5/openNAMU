@@ -10,7 +10,7 @@ def list_not_categorized():
 
         div = '<ul class="opennamu_ul">'
 
-        curs.execute(db_change('SELECT DISTINCT title FROM history WHERE title NOT LIKE "category:%" AND title NOT IN (SELECT link FROM back WHERE type = "cat") limit 50'))
+        curs.execute(db_change('SELECT DISTINCT title as t from history where title not like "category:%" and title not in (select link from back where type="cat") and not EXISTS (select type from history where title=t and type="delete") limit 50;'))
         for data in curs.fetchall():
             if not data[0]:
                 continue
