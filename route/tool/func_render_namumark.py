@@ -141,7 +141,7 @@ class class_do_render_namumark:
             else:
                 data += '<a id="' + self.doc_include + 'fn_' + self.data_footnote[for_a]['list'][0] + '" href="#' + self.doc_include + 'rfn_' + self.data_footnote[for_a]['list'][0] + '">(' + for_a + ') </a> '
 
-            data += self.data_footnote[for_a]['data']
+            data += '<span id="'+self.doc_include+'dfn_'+self.data_footnote[for_a]['list'][0]+'">'+self.data_footnote[for_a]['data']+'</span>'
 
         if data != '':
             data += '</div>'
@@ -1084,7 +1084,7 @@ class class_do_render_namumark:
                         self.data_footnote[footnote_name]['list'] += [str(footnote_num)]
                         footnote_first = self.data_footnote[footnote_name]['list'][0]
                     
-                        data_name = self.get_tool_data_storage('<sup><a id="' + self.doc_include + 'rfn_' + str(footnote_num) + '" href="#' + self.doc_include + 'fn_' + footnote_first + '">(' + footnote_name + ' (' + str(footnote_num) + ')' + ')</a></sup>', '', footnote_data_org)
+                        data_name = self.get_tool_data_storage('<sup class="rfn"><a id="' + self.doc_include + 'rfn_' + str(footnote_num) + '" href="#' + self.doc_include + 'fn_' + footnote_first + '">(' + footnote_name + ' (' + str(footnote_num) + ')' + ')</a></sup>', '', footnote_data_org)
 
                         self.render_data = re.sub(footnote_regex, '<' + data_name + '></' + data_name + '>', self.render_data, 1)
                     else:
@@ -1092,7 +1092,7 @@ class class_do_render_namumark:
                         self.data_footnote[footnote_name]['list'] = [str(footnote_num)]
                         self.data_footnote[footnote_name]['data'] = footnote_text_data
 
-                        data_name = self.get_tool_data_storage('<sup><a id="' + self.doc_include + 'rfn_' + str(footnote_num) + '" href="#' + self.doc_include + 'fn_' + str(footnote_num) + '">(' + footnote_name + footnote_name_add + ')</a></sup>', '', footnote_data_org)
+                        data_name = self.get_tool_data_storage('<sup class="rfn"><a id="' + self.doc_include + 'rfn_' + str(footnote_num) + '" href="#' + self.doc_include + 'fn_' + str(footnote_num) + '">(' + footnote_name + footnote_name_add + ')</a></sup>', '', footnote_data_org)
 
                         self.render_data = re.sub(footnote_regex, '<' + data_name + '></' + data_name + '>', self.render_data, 1)
 

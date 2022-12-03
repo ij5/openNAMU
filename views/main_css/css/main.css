@@ -291,3 +291,15 @@ s:hover, strike:hover, del:hover {
 .change_space {
     white-space: pre-line;
 }
+
+/* -------------------- */
+
+.tooltip {
+    width: 300px;
+    position: fixed;
+    padding: 10px;
+    border: 1px solid gray;
+    background-color: white;
+    box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+    box-sizing: border-box;
+}
