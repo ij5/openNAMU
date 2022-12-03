@@ -30,6 +30,7 @@ def main_tool_other():
                         <li><a href="/long_page">''' + load_lang('long_page') + '''</a></li>
                         <li><a href="/short_page">''' + load_lang('short_page') + '''</a></li>
                         <li><a href="/old_page">''' + load_lang('old_page') + '''</a></li>
+                        <li><a href="/not_categorized">'''+ load_lang('not_categorized') + '''</a></li>
                     </ul>
                     <h3>2.4. ''' + load_lang('user') + '''</h3>
                     <ul class="opennamu_ul">

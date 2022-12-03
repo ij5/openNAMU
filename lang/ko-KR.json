@@ -1,5 +1,6 @@
 {
     "auto_login": "자동 로그인",
+    "not_categorized": "분류되지 않은 문서",
     "language_tag": "ko-KR",
     "delete_admin_group": "관리자 그룹 삭제",
     "document_name": "문서명",

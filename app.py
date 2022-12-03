@@ -331,6 +331,10 @@ def list_title_index():
 def list_long_page():
     return list_long_page_2('long_page')
 
+@app.route('/not_categorized')
+def not_categorized_page():
+    return list_not_categorized()
+
 # /list/document/short
 @app.route('/short_page')
 def list_short_page():
