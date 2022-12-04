@@ -10,11 +10,11 @@ def vote_list(list_type = 'normal', num = 1):
         if list_type == 'normal':
             data += '<a href="/vote/list/close">(' + load_lang('close_vote_list') + ')</a>'
             sub = 0
-            curs.execute(db_change('select name, id, type from vote where type = "open" or type = "n_open" limit ?, 50'), [sql_num])
+            curs.execute(db_change('select name, id, type from vote where (type = "open" or type = "n_open") and name != "end_date" limit ?, 50'), [sql_num])
         else:
             data += '<a href="/vote">(' + load_lang('open_vote_list') + ')</a>'
             sub = '(' + load_lang('closed') + ')'
-            curs.execute(db_change('select name, id, type from vote where type = "close" or type = "n_close" limit ?, 50'), [sql_num])
+            curs.execute(db_change('select name, id, type from vote where (type = "close" or type = "n_close") and name != "end_date" limit ?, 50'), [sql_num])
 
         data += '<ul class="opennamu_ul">'
 
