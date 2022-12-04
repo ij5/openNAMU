@@ -4,8 +4,10 @@
         <meta charset="utf-8">
         {% if imp[3][0] != 0 %}
             <title>{{imp[0]}} {{imp[3][0]}} - {{imp[1][0]}}</title>
+            <meta property="og:title" content="{{imp[0]}} {{imp[3][0]}} - {{imp[1][0]}}">
         {% else %}
             <title>{{imp[0]}} - {{imp[1][0]}}</title>
+            <meta property="og:title" content="{{imp[0]}} - {{imp[1][0]}}">
         {% endif %}
         {{imp[3][3]|safe}}
         <script src="https://code.iconify.design/1/1.0.3/iconify.min.js"></script>
