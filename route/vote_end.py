@@ -12,7 +12,7 @@ def vote_end(num = 1):
             return redirect('/vote')
 
         data = ''
-        if admin_check() == 1:
+        if admin_check(3) == 1:
             if data_list[0][3] == 'open' or data_list[0][3] == 'n_open':
                 data += '<a href="/vote/close/' + num + '">(' + load_lang('close_vote') + ')</a>'
             else:

@@ -29,7 +29,7 @@ def vote_list(list_type = 'normal', num = 1):
 
         data += '</ul>'
         if list_type == 'normal':
-            data += ('<a href="/vote/add">(' + load_lang('add_vote') + ')</a>') if admin_check() == 1 else ''
+            data += ('<a href="/vote/add">(' + load_lang('add_vote') + ')</a>') if admin_check(3) == 1 else ''
             data += next_fix('/vote/list/', num, data_list)
         else:
             data += next_fix('/vote/list/close/', num, data_list)

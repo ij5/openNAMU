@@ -6,7 +6,7 @@ def vote_close(num = 1):
     with get_db_connect() as conn:
         curs = conn.cursor()
 
-        if admin_check() != 1:
+        if admin_check(3) != 1:
             return re_error('/ban')
 
         curs.execute(db_change('select type from vote where id = ? and user = ""'), [num])

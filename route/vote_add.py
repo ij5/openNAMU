@@ -4,7 +4,7 @@ def vote_add():
     with get_db_connect() as conn:
         curs = conn.cursor()
 
-        if admin_check() != 1:
+        if admin_check(3) != 1:
             return re_error('/ban')
 
         if flask.request.method == 'POST':
@@ -16,7 +16,7 @@ def vote_add():
             id_data = curs.fetchall()
             id_data = str((int(id_data[0][0]) + 1) if id_data else 1)
 
-            admin_check(None, 'add vote ' + id_data)
+            admin_check(3, 'add vote ' + id_data)
 
             if flask.request.form.get('open_select', 'N') == 'Y':
                 open_data = 'open'
