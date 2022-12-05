@@ -16,11 +16,18 @@ document.addEventListener('DOMContentLoaded', ()=>{
         }
     })
     for(let i = 0; i < rfns.length; i++) {
-        rfns[i].addEventListener('click', (ev)=>{
+        rfns[i].children[0].addEventListener('click', (ev)=>{
             ev.preventDefault();
-            if(!doubleclick) {
-                doubleclick = true;
-                tooltip.innerHTML = document.getElementById('d'+rfns[i].children[0].getAttribute('href').split('#')[1]).innerHTML;
+            ev.stopPropagation();
+            let dref = rfns[i].children[0].getAttribute('href').split('#')[1]
+            if(dref===doubleclick) {
+                tooltip.style.display = 'none';
+                document.getElementById(dref).scrollIntoView();
+                window.location.hash = '#'+dref
+                doubleclick = false;
+            } else {
+                doubleclick = dref;
+                tooltip.innerHTML = document.getElementById('d'+dref).innerHTML;
                 tooltip.style.position = 'fixed';
                 tooltip.style.display = 'block';
                 let coords = ev.target.getBoundingClientRect();
@@ -32,16 +39,12 @@ document.addEventListener('DOMContentLoaded', ()=>{
                 }
                 tooltip.style.left = left + 'px';
                 tooltip.style.top = top + 'px';
-                console.log(tooltip.offsetLeft + tooltip.offsetWidth)
-                console.log(window.innerWidth)
                 if(tooltip.offsetLeft + tooltip.offsetWidth > window.innerWidth) {
                     tooltip.style.width = window.innerWidth + 'px';
+                    tooltip.style.left = '0px';
                 }
                 return;
             }
-            tooltip.style.display = 'none';
-            document.getElementById(rfns[i].children[0].getAttribute('href').split('#')[1]).scrollIntoView();
-            doubleclick = false;
         })
     }
 })
