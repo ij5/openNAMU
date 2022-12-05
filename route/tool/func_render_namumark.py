@@ -552,12 +552,6 @@ class class_do_render_namumark:
                 if not count_data:
                     return '0'
                 return str(count_data[0][0])
-            elif name_data == 'contributecount':
-                self.curs.execute(db_change("SELECT COUNT(*) from history"))
-                count_data = self.curs.fetchall()
-                if not count_data:
-                    return '0'
-                return str(count_data[0][0])
             else:
                 return '<macro>' + match[0] + '(' + match[1] + ')' + '</macro>'
 
@@ -587,6 +581,12 @@ class class_do_render_namumark:
                 return '<toc_need_part>'
             elif match == 'pagecount':
                 self.curs.execute(db_change("SELECT count(DISTINCT title) from history"))
+                count_data = self.curs.fetchall()
+                if not count_data:
+                    return '0'
+                return str(count_data[0][0])
+            elif match == 'contributecount':
+                self.curs.execute(db_change("SELECT COUNT(*) from history"))
                 count_data = self.curs.fetchall()
                 if not count_data:
                     return '0'
