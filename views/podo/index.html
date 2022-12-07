@@ -29,6 +29,14 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
     </head>
     <body>
+        <div style="display: none;">
+            {% if imp[3][0] != 0 %}
+            <div class="daum-wm-title">{{imp[0]}} {{imp[3][0]}} - {{imp[1][0]}}</div>
+            {% else %}
+            <div class="daum-wm-title">{{imp[0]}} - {{imp[1][0]}}</div>
+            {% endif %}
+            <div class="daum-wm-content">여러분이 가꾸어 나가는 지식의 나무</div>
+        </div>
         <header id="main">
             <span id="left">
                 <a id="logo" href="/">{{imp[1][4]|safe}}</a>
