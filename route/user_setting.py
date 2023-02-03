@@ -5,9 +5,9 @@ def user_setting():
         curs = conn.cursor()
 
         support_language = ['default'] + get_init_set_list()['language']['list']
+        
         ip = ip_check()
-
-        if ban_check() == 1:
+        if ban_check(ip) == 1:
             return re_error('/ban')
 
         if ip_or_user(ip) == 0:
@@ -108,6 +108,8 @@ def user_setting():
                             <hr class="main_hr">
                             <span>''' + load_lang('password_instead_key') + ''' : ''' + ramdom_key + ''' <a href="/change/key">(''' + load_lang('key_change') + ''')</a> <a href="/change/key/delete">(''' + load_lang('key_delete') + ''')</a></span>
                             <h2>''' + load_lang('main') + '''</h2>
+                            <a href="/change/head">(''' + load_lang('user_head') + ''')</a> <a href="/change/top_menu">(''' + load_lang('user_top_menu') + ''')</a>
+                            <hr class="main_hr">
                             <span>''' + load_lang('skin') + '''</span>
                             <hr class="main_hr">
                             <select name="skin">''' + div2 + '''</select>

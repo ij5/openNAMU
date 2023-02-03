@@ -10,7 +10,10 @@ def main_func_setting_acl():
             3 : 'upload_acl',
             4 : 'all_view_acl',
             5 : 'many_upload_acl',
-            6 : 'vote_acl'
+            6 : 'vote_acl',
+            7 : 'document_edit_acl',
+            8 : 'document_move_acl',
+            9 : 'document_delete_acl'
         }
 
         if flask.request.method == 'POST':
@@ -40,7 +43,7 @@ def main_func_setting_acl():
                 if sql_d:
                     d_list[i] = sql_d[0][0]
                 else:
-                    curs.execute(db_change('insert into other (name, data) values (?, ?)'), [i_list[i], 'normal'])
+                    curs.execute(db_change('insert into other (name, data, coverage) values (?, ?, "")'), [i_list[i], 'normal'])
 
                     d_list[i] = 'normal'
 

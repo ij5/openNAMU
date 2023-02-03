@@ -10,6 +10,7 @@ class class_do_render_namumark:
         self.doc_include = self.doc_set['doc_include'] if 'doc_include' in self.doc_set else ''
 
         self.lang_data = lang_data
+        self.ip = ip_check()
 
         self.data_temp_storage = {}
         self.data_temp_storage_count = 0
@@ -39,6 +40,7 @@ class class_do_render_namumark:
     def get_tool_js_safe(self, data):
         data = data.replace('\n', '\\\\n')
         data = data.replace('\\', '\\\\')
+        data = data.replace("'", "\\'")
         data = data.replace('"', '\\"')
 
         return data
@@ -169,12 +171,18 @@ class class_do_render_namumark:
 
     def do_render_text(self):
         # <b> function
-        bold_user_set = flask.request.cookies.get('main_css_del_bold', '0')
+        if ip_or_user(self.ip) == 0:
+            self.curs.execute(db_change('select data from user_set where name = "main_css_bold" and id = ?'), [self.ip])
+            db_data = self.curs.fetchall()
+            bold_user_set = db_data[0][0] if db_data else 'normal'
+        else:
+            bold_user_set = flask.session['main_css_bold'] if 'main_css_bold' in flask.session else 'normal'
+
         def do_render_text_bold(match):
             data = match.group(1)
-            if bold_user_set == '0':
+            if bold_user_set == 'normal':
                 data_name = self.get_tool_data_storage('<b>', '</b>', match.group(0))
-            elif bold_user_set == '1':
+            elif bold_user_set == 'change':
                 data_name = self.get_tool_data_storage('', '', match.group(0))
             else:
                 return ''
@@ -228,13 +236,19 @@ class class_do_render_namumark:
         # <sub> 2
         self.render_data = re.sub(r",,((?:(?!,,).)+),,", do_render_text_sub, self.render_data)
 
-        # <sub> function
-        strike_user_set = flask.request.cookies.get('main_css_del_strike', '0')
+        # <s> function
+        if ip_or_user(self.ip) == 0:
+            self.curs.execute(db_change('select data from user_set where name = "main_css_strike" and id = ?'), [self.ip])
+            db_data = self.curs.fetchall()
+            strike_user_set = db_data[0][0] if db_data else 'normal'
+        else:
+            strike_user_set = flask.session['main_css_strike'] if 'main_css_strike' in flask.session else 'normal'
+
         def do_render_text_strike(match):
             data = match.group(1)
-            if bold_user_set == '0':
+            if strike_user_set == 'normal':
                 data_name = self.get_tool_data_storage('<s>', '</s>', match.group(0))
-            elif bold_user_set == '1':
+            elif strike_user_set == 'change':
                 data_name = self.get_tool_data_storage('', '', match.group(0))
             else:
                 return ''
@@ -536,15 +550,17 @@ class class_do_render_namumark:
                 if re.search(r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$', match[1]):
                     try:
                         date = datetime.datetime.strptime(match[1], '%Y-%m-%d')
+                        data_text = ''
                     except:
                         data_text = 'invalid date'
 
                     date_now = datetime.datetime.today()
 
-                    if date > date_now:
-                        data_text = 'invalid date'
-                    else:
-                        data_text = str((date_now - date).days // 365)
+                    if data_text == '':
+                        if date > date_now:
+                            data_text = 'invalid date'
+                        else:
+                            data_text = str((date_now - date).days // 365)
                 else:
                     data_text = 'invalid date'
 
@@ -555,19 +571,21 @@ class class_do_render_namumark:
                 if re.search(r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$', match[1]):
                     try:
                         date = datetime.datetime.strptime(match[1], '%Y-%m-%d')
+                        data_text = ''
                     except:
                         data_text = 'invalid date'
 
                     date_now = datetime.datetime.today()
                     
-                    date_end = (date_now - date).days
-                    if date_end > 0:
-                        data_text = '+' + str(date_end)
-                    else:
-                        if date_end == 0:
-                            data_text = '-' + str(date_end)
+                    if data_text == '':
+                        date_end = (date_now - date).days
+                        if date_end > 0:
+                            data_text = '+' + str(date_end)
                         else:
-                            data_text = str(date_end)
+                            if date_end == 0:
+                                data_text = '-' + str(date_end)
+                            else:
+                                data_text = str(date_end)
                 else:
                     data_text = 'invalid date'
 
@@ -702,10 +720,8 @@ class class_do_render_namumark:
                                 elif data_sub[0] == 'height':
                                     file_height = self.get_tool_px_add_check(data_sub[1])
                                 elif data_sub[0] == 'align':
-                                    if data_sub[1] in ('left', 'right'):
-                                        file_align = 'float:' + data_sub[1] + ';'
-                                    elif data_sub[1] == 'center':
-                                        file_align = 'center'
+                                    if data_sub[1] in ('center', 'left', 'right'):
+                                        file_align = data_sub[1]
                                 elif data_sub[0] == 'bgcolor':
                                     file_bgcolor = data_sub[1]
                                 elif data_sub[0] == 'theme':
@@ -757,16 +773,26 @@ class class_do_render_namumark:
 
                         link_main = '/image/' + url_pas(sha224_replace(link_main)) + '.' + link_extension
 
-                    file_width = self.get_tool_css_safe(file_width)
-                    file_height = self.get_tool_css_safe(file_height)
+                    if file_width != '':
+                        file_width = 'width:' + self.get_tool_css_safe(file_width) + ';'
+                    
+                    if file_height != '':
+                        file_height = 'height:' + self.get_tool_css_safe(file_height) + ';'
 
-                    file_end = '<image style="width:' + file_width + ';height:' + file_height + ';' + file_align + ';background:' + file_bgcolor + ';" alt="' + link_sub + '" src="' + link_main + '">'
+                    file_align_style = ''
+                    if file_align in ('left', 'right'):
+                        file_align_style = 'float:' + file_align + ';'
+
+                    if file_bgcolor != '':
+                        file_bgcolor = 'background:' + self.get_tool_css_safe(file_bgcolor) + ';'
+
+                    file_end = '<img style="' + file_width + file_height + file_align_style + file_bgcolor + '" alt="' + link_sub + '" src="' + link_main + '">'
                     if file_align == 'center':
                         file_end = '<div style="text-align:center;">' + file_end + '</div>'
 
                     if link_exist != '':
-                        data_name = self.get_tool_data_storage('<a class="' + link_exist + '" title="' + link_sub + '" href="/upload?name=' + url_pas(link_main_org) + '">', '</a>', link_data_full)
-                        self.render_data = re.sub(link_regex, lambda x : ('<' + data_name + '>' + link_sub + '</' + data_name + '>'), self.render_data, 1)
+                        data_name = self.get_tool_data_storage('<a class="' + link_exist + '" title="' + link_sub + '" href="/upload?name=' + url_pas(link_main_org) + '">' + link_sub, '</a>', link_data_full)
+                        self.render_data = re.sub(link_regex, '<' + data_name + '></' + data_name + '>', self.render_data, 1)
                     else:
                         file_pass = 0
                         if file_turn != '':
@@ -840,19 +866,24 @@ class class_do_render_namumark:
                     link_main = re.sub(link_inter_regex, '', link_main)
                     link_title = link_inter_name + ':' + link_main
 
-                    link_main = self.get_tool_data_restore(link_main, do_type = 'slash')
-                    link_main = html.unescape(link_main)
-                    
                     # sharp
+                    link_main = link_main.replace('&#x27;', '<link_single>')
                     link_data_sharp_regex = r'#([^#]+)$'
                     link_data_sharp = re.search(link_data_sharp_regex, link_main)
                     if link_data_sharp:
                         link_data_sharp = link_data_sharp.group(1)
+                        link_data_sharp = html.unescape(link_data_sharp)
                         link_data_sharp = '#' + url_pas(link_data_sharp)
 
                         link_main = re.sub(link_data_sharp_regex, '', link_main)
                     else:
                         link_data_sharp = ''
+                    
+                    link_main = link_main.replace('<link_single>', '&#x27;')
+
+                    # main link fix
+                    link_main = self.get_tool_data_restore(link_main, do_type = 'slash')
+                    link_main = html.unescape(link_main)
                     
                     link_main = url_pas(link_main)
 
@@ -884,6 +915,7 @@ class class_do_render_namumark:
                 # out link
                 elif re.search(r'^https?:\/\/', link_main, flags = re.I):
                     link_main = self.get_tool_data_restore(link_main, do_type = 'slash')
+                    link_title = link_main
                     link_main = html.unescape(link_main)
                     link_main = re.sub(r'"', '&quot;', link_main)
                     
@@ -895,7 +927,7 @@ class class_do_render_namumark:
                         link_sub = ''
                         link_sub_storage = link_main_org
 
-                    data_name = self.get_tool_data_storage('<a class="opennamu_link_out" title="" href="' + link_main + '">' + link_sub_storage, '</a>', link_data_full)
+                    data_name = self.get_tool_data_storage('<a class="opennamu_link_out" target="_blank" title="' + link_title + '" href="' + link_main + '">' + link_sub_storage, '</a>', link_data_full)
 
                     self.render_data = re.sub(link_regex, lambda x : ('<' + data_name + '>' + link_sub + '</' + data_name + '>'), self.render_data, 1)
                 # in link
@@ -913,21 +945,26 @@ class class_do_render_namumark:
                     elif re.search(r'^사용자:', link_main, flags = re.I):
                         link_main = re.sub(r'^사용자:', 'user:', link_main, flags = re.I)
 
-                    # main link fix
-                    link_main = self.get_tool_data_restore(link_main, do_type = 'slash')
-                    link_main = html.unescape(link_main)
-                    
                     # sharp
+                    link_main = link_main.replace('&#x27;', '<link_single>')
                     link_data_sharp_regex = r'#([^#]+)$'
                     link_data_sharp = re.search(link_data_sharp_regex, link_main)
                     if link_data_sharp:
                         link_data_sharp = link_data_sharp.group(1)
+                        link_data_sharp = html.unescape(link_data_sharp)
                         link_data_sharp = '#' + url_pas(link_data_sharp)
 
                         link_main = re.sub(link_data_sharp_regex, '', link_main)
                     else:
                         link_data_sharp = ''
+                    
+                    link_main = link_main.replace('<link_single>', '&#x27;')
 
+                    # main link fix
+                    link_main = self.get_tool_data_restore(link_main, do_type = 'slash')
+                    link_main = html.unescape(link_main)
+
+                    # link_title
                     link_title = html.escape(link_main + link_data_sharp)
 
                     link_exist = ''
@@ -1071,13 +1108,19 @@ class class_do_render_namumark:
                 db_data = self.curs.fetchall()
                 if db_data:
                     self.data_backlink += [[self.doc_name, include_name, 'include']]
+                    include_data = db_data[0][0].replace('\r', '')
 
                     # include link func
-                    include_link = ''
-                    if flask.request.cookies.get('main_css_include_link', '') == '1':
-                        include_link = '<div><a href="/w/' + url_pas(include_name) + '">(' + include_name_org + ')</a></div>'
+                    if ip_or_user(self.ip) == 0:
+                        self.curs.execute(db_change('select data from user_set where name = "main_css_include_link" and id = ?'), [self.ip])
+                        db_data = self.curs.fetchall()
+                        include_set_data = db_data[0][0] if db_data else 'normal'
+                    else:
+                        include_set_data = flask.session['main_css_include_link'] if 'main_css_include_link' in flask.session else 'normal'
 
-                    include_data = db_data[0][0].replace('\r', '')
+                    include_link = ''
+                    if include_set_data == 'use':
+                        include_link = '<div><a href="/w/' + url_pas(include_name) + '">(' + include_name_org + ')</a></div>'
 
                     # parameter replace
                     include_data = re.sub(r'(\\+)?@([ㄱ-힣a-zA-Z]+)=((?:\\@|[^@\n])+)@', do_render_include_default_sub, include_data)
@@ -1177,19 +1220,24 @@ class class_do_render_namumark:
             elif re.search(r'^사용자:', link_main):
                 link_main = re.sub(r'^사용자:', 'user:', link_main)
 
-            link_main = self.get_tool_data_restore(link_main, do_type = 'slash')
-            link_main = html.unescape(link_main)
-            
             # sharp
+            link_main = link_main.replace('&#x27;', '<link_single>')
             link_data_sharp_regex = r'#([^#]+)$'
             link_data_sharp = re.search(link_data_sharp_regex, link_main)
             if link_data_sharp:
                 link_data_sharp = link_data_sharp.group(1)
+                link_data_sharp = html.unescape(link_data_sharp)
                 link_data_sharp = '#' + url_pas(link_data_sharp)
 
                 link_main = re.sub(link_data_sharp_regex, '', link_main)
             else:
                 link_data_sharp = ''
+            
+            link_main = link_main.replace('<link_single>', '&#x27;')
+
+            # main link fix
+            link_main = self.get_tool_data_restore(link_main, do_type = 'slash')
+            link_main = html.unescape(link_main)
 
             self.data_backlink += [[self.doc_name, link_main, 'redirect']]
 
@@ -1715,14 +1763,21 @@ class class_do_render_namumark:
             if self.data_category != '':
                 data_name = self.get_tool_data_storage(self.data_category, '</div>', '')
 
-                if flask.request.cookies.get('main_css_category_set', '0') == '0':
+                if ip_or_user(self.ip) == 0:
+                    self.curs.execute(db_change('select data from user_set where name = "main_css_category_set" and id = ?'), [self.ip])
+                    db_data = self.curs.fetchall()
+                    category_set_data = db_data[0][0] if db_data else 'normal'
+                else:
+                    category_set_data = flask.session['main_css_category_set'] if 'main_css_category_set' in flask.session else 'normal'
+
+                if category_set_data == 'normal':
                     if re.search(r'<footnote_category>', self.render_data):
                         self.render_data = re.sub(r'<footnote_category>', '<hr><' + data_name + '></' + data_name + '>', self.render_data, 1)
                     else:
                         self.render_data += '<hr><' + data_name + '></' + data_name + '>'
                 else:
                     self.render_data = re.sub(r'<footnote_category>', '', self.render_data, 1)
-                    self.render_data = '<' + data_name + '></' + data_name + '><hr>' + self.render_data
+                    self.render_data = '<' + data_name + '></' + data_name + '><hr class="main_hr">' + self.render_data
             else:
                 self.render_data = re.sub(r'<footnote_category>', '', self.render_data, 1)
         else:
@@ -1738,6 +1793,33 @@ class class_do_render_namumark:
         # <render_n> restore
         self.render_data = self.get_tool_data_restore(self.render_data)
 
+        # a fix
+        self.temp_a_link_count = 0
+        def do_render_last_a_link(match):
+            data = match.group(1)
+            if data == '</a>':
+                if self.temp_a_link_count == 0:
+                    return ''
+                elif self.temp_a_link_count > 1:
+                    self.temp_a_link_count -= 1
+                    
+                    return ''
+                else:
+                    self.temp_a_link_count -= 1
+                    
+                    return match.group(0)
+            else:
+                if self.temp_a_link_count > 0:
+                    self.temp_a_link_count += 1
+                    
+                    return ''
+                else:
+                    self.temp_a_link_count += 1
+                    
+                    return match.group(0)
+            
+        self.render_data = re.sub(r'(<a(?: [^<>]*)?>|<\/a>)', do_render_last_a_link, self.render_data)
+        
         # add toc
         def do_render_last_toc(match):
             data = match.group(1)
@@ -1763,8 +1845,15 @@ class class_do_render_namumark:
             self.data_toc = toc_data
             self.data_toc = re.sub(r'<toc_inside>((?:(?!<toc_inside>|<\/toc_inside>).)*)<\/toc_inside>', do_render_last_toc, self.data_toc)
 
+            if ip_or_user(self.ip) == 0:
+                self.curs.execute(db_change('select data from user_set where name = "main_css_toc_set" and id = ?'), [self.ip])
+                db_data = self.curs.fetchall()
+                toc_set_data = db_data[0][0] if db_data else 'normal'
+            else:
+                toc_set_data = flask.session['main_css_toc_set'] if 'main_css_toc_set' in flask.session else 'normal'
+
             self.render_data = re.sub(toc_search_regex, '', self.render_data)
-            if flask.request.cookies.get('main_css_toc_set', '0') != '1':
+            if toc_set_data != 'off':
                 if re.search(r'<toc_need_part>', self.render_data):
                     toc_data_on = 1
 
@@ -1775,7 +1864,7 @@ class class_do_render_namumark:
 
             if  self.doc_include != '' or \
                 re.search(r'<toc_no_auto>', self.render_data) or \
-                flask.request.cookies.get('main_css_toc_set', '0') != '0' or \
+                toc_set_data != 'normal' or \
                 toc_data_on == 1:
                 self.render_data = re.sub(r'<toc_no_auto>', '', self.render_data)
             else:

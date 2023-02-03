@@ -192,7 +192,7 @@ with get_db_connect() as conn:
         elif server_set_env[i] != None:
             server_set_val = server_set_env[i]
 
-            curs.execute(db_change('insert into other (name, data) values (?, ?)'), [i, server_set_env[i]])
+            curs.execute(db_change('insert into other (name, data, coverage) values (?, ?, "")'), [i, server_set_env[i]])
         else:
             if 'list' in server_set_var[i]:
                 print(server_set_var[i]['display'] + ' (' + server_set_var[i]['default'] + ') [' + ', '.join(server_set_var[i]['list']) + ']' + ' : ', end = '')
@@ -206,7 +206,7 @@ with get_db_connect() as conn:
                 if not server_set_val in server_set_var[i]['list']:
                     server_set_val = server_set_var[i]['default']
 
-            curs.execute(db_change('insert into other (name, data) values (?, ?)'), [i, server_set_val])
+            curs.execute(db_change('insert into other (name, data, coverage) values (?, ?, "")'), [i, server_set_val])
 
         print(server_set_var[i]['display'] + ' : ' + server_set_val)
 
@@ -260,7 +260,7 @@ with get_db_connect() as conn:
 if os.path.exists('custom.py'):
     from custom import custom_run
     custom_run('error', app)
-    
+
 # Func
 # Func-inter_wiki
 app.route('/inter_wiki', defaults = { 'tool' : 'inter_wiki' })(filter_inter_wiki)
@@ -499,7 +499,11 @@ app.route('/change/head', methods=['GET', 'POST'], defaults = { 'skin_name' : ''
 app.route('/change/head/<skin_name>', methods=['GET', 'POST'])(user_setting_head)
 app.route('/change/head_reset', methods=['GET', 'POST'])(user_setting_head_reset)
 app.route('/change/skin_set')(user_setting_skin_set)
-app.route('/change/skin_set/main')(user_setting_skin_set)
+app.route('/change/top_menu', methods=['GET', 'POST'])(user_setting_top_menu)
+# 하위 호환용 S
+app.route('/skin_set')(user_setting_skin_set)
+# 하위 호환용 E
+app.route('/change/skin_set/main', methods = ['POST', 'GET'])(user_setting_skin_set_main)
 
 app.route('/user')(user_info)
 app.route('/user/<name>')(user_info)
@@ -517,11 +521,6 @@ app.route('/watch_list/<everything:name>', defaults = { 'tool' : 'watch_list' })
 
 app.route('/star_doc', defaults = { 'tool' : 'star_doc' })(user_watch_list)
 app.route('/star_doc/<everything:name>', defaults = { 'tool' : 'star_doc' })(user_watch_list_name)
-
-# 하위 호환용 S
-# /change/skin_set
-app.route('/skin_set')(user_setting_skin_set)
-# 하위 호환용 E
 
 # 개편 보류중 S
 @app.route('/change/email', methods = ['POST', 'GET'])
@@ -646,6 +645,7 @@ app.route('/goto/<everything:name>', methods=['POST'])(main_search_goto)
 app.route('/setting')(main_func_setting)
 app.route('/setting/main', defaults = { 'db_set' : data_db_set['type'] }, methods = ['POST', 'GET'])(main_func_setting_main)
 app.route('/setting/main/logo', methods = ['POST', 'GET'])(main_func_setting_main_logo)
+app.route('/setting/top_menu', methods = ['POST', 'GET'])(main_func_setting_top_menu)
 app.route('/setting/phrase', methods = ['POST', 'GET'])(main_func_setting_phrase)
 app.route('/setting/head', defaults = { 'num' : 3 }, methods = ['POST', 'GET'])(main_func_setting_head)
 app.route('/setting/head/<skin_name>', defaults = { 'num' : 3 }, methods = ['POST', 'GET'])(main_func_setting_head)
