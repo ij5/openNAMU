@@ -305,3 +305,16 @@ s:hover, strike:hover, del:hover {
     box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
     box-sizing: border-box;
 }
+
+
+.spoiler {
+    background-color: yellow;
+    border: 1px solid gray;
+    cursor: pointer;
+}
+.beep {
+    display: none;
+}
+.beep.show {
+    display: inline;
+}

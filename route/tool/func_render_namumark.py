@@ -680,6 +680,22 @@ class class_do_render_namumark:
         math_regex = re.compile('\[math\(((?:(?!\[math\(|\)\]).|\n)+)\)\]', re.I)
         self.render_data = re.sub(math_regex, do_render_math_sub, self.render_data)
 
+    def do_render_spoiler(self):
+        spoiler_regex = r'(\${2})([^\$#]+)(\${2})'
+        spoiler_count_all = len(re.findall(spoiler_regex, self.render_data))
+        while 1:
+            if not re.search(spoiler_regex, self.render_data):
+                break
+            elif spoiler_count_all < 0:
+                print('Error: render spoiler count overflow')
+                break
+            else:
+                spoiler_data = re.search(spoiler_regex, self.render_data)
+                spoiler_data = spoiler_data.groups()
+                spoiler_main = spoiler_data[1]
+                self.render_data = re.sub(spoiler_regex, f'<span class="spoiler">삐-</span><span class="beep">{spoiler_main}</span>', self.render_data, 1)
+            spoiler_count_all -= 1
+
     def do_render_link(self):
         link_regex = r'\[\[((?:(?!\[\[|\]\]|\||<|>).|<slash_[0-9]+>)+)(?:\|((?:(?!\[\[|\]\]|\|).)+))?\]\]'
         link_count_all = len(re.findall(link_regex, self.render_data)) * 4
@@ -1907,6 +1923,7 @@ class class_do_render_namumark:
             self.do_render_text()
             self.do_render_hr()
             self.do_render_heading()
+            self.do_render_spoiler()
             
         self.do_render_last()
 

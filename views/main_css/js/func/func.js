@@ -47,6 +47,15 @@ document.addEventListener('DOMContentLoaded', ()=>{
             }
         })
     }
+
+
+    for(let b of Array.from(document.getElementsByClassName("spoiler"))) {
+        b.addEventListener('click', ()=>{
+            Array.from(document.getElementsByClassName('beep')).forEach((e)=>{
+                e.classList.toggle('show');
+            })
+        })
+    }
 })
 
 function opennamu_do_id_check(data) {
