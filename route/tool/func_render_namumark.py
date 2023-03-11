@@ -10,7 +10,24 @@ class class_do_render_namumark:
         self.doc_include = self.doc_set['doc_include'] if 'doc_include' in self.doc_set else ''
 
         self.lang_data = lang_data
-        self.ip = ip_check()
+        try:
+            self.ip = ip_check()
+        except:
+            self.ip = '0.0.0.0'
+
+        try:
+            if 'main_css_bold' in self.flask_session:
+                pass    
+                
+            self.flask_session = flask.session
+        except:
+            self.flask_session = ''
+
+        try:
+            self.darkmode = flask.request.cookies.get('main_css_darkmode', '0')
+        except:
+            self.darkmode = '0'
+
 
         self.data_temp_storage = {}
         self.data_temp_storage_count = 0
@@ -164,7 +181,7 @@ class class_do_render_namumark:
         if len(data) == 1:
             return data[0]
         else:
-            if flask.request.cookies.get('main_css_darkmode', '0') == '0':
+            if self.darkmode == '0':
                 return data[0]
             else:
                 return data[1]
@@ -176,7 +193,7 @@ class class_do_render_namumark:
             db_data = self.curs.fetchall()
             bold_user_set = db_data[0][0] if db_data else 'normal'
         else:
-            bold_user_set = flask.session['main_css_bold'] if 'main_css_bold' in flask.session else 'normal'
+            bold_user_set = self.flask_session['main_css_bold'] if 'main_css_bold' in self.flask_session else 'normal'
 
         def do_render_text_bold(match):
             data = match.group(1)
@@ -242,7 +259,7 @@ class class_do_render_namumark:
             db_data = self.curs.fetchall()
             strike_user_set = db_data[0][0] if db_data else 'normal'
         else:
-            strike_user_set = flask.session['main_css_strike'] if 'main_css_strike' in flask.session else 'normal'
+            strike_user_set = self.flask_session['main_css_strike'] if 'main_css_strike' in self.flask_session else 'normal'
 
         def do_render_text_strike(match):
             data = match.group(1)
@@ -812,9 +829,9 @@ class class_do_render_namumark:
                     else:
                         file_pass = 0
                         if file_turn != '':
-                            if file_turn == 'dark' and flask.request.cookies.get('main_css_darkmode', '0') == '1':
+                            if file_turn == 'dark' and self.darkmode == '1':
                                 file_pass = 1
-                            elif file_turn == 'light' and flask.request.cookies.get('main_css_darkmode', '0') == '0':
+                            elif file_turn == 'light' and self.darkmode == '0':
                                 file_pass = 1
                         else:
                             file_pass = 1
@@ -1090,76 +1107,78 @@ class class_do_render_namumark:
             elif not match:
                 break
             else:
-                match_org = match.group(0)
-                match = match.groups()
-
-                macro_split_regex = r'(?:^|,) *([^,]+)'
-                macro_split_sub_regex = r'^([^=]+) *= *(.*)$'
-
-                include_name = ''
-
-                data = re.findall(macro_split_regex, match[0])
-                for for_a in data:
-                    data_sub = re.search(macro_split_sub_regex, for_a)
-                    if data_sub:
-                        data_sub = data_sub.groups()
-                        
-                        data_sub_name = data_sub[0]
-                        data_sub_data = self.get_tool_data_restore(data_sub[1], do_type = 'slash')
-                        
-                        data_sub_data = re.sub(r'^분류:', ':분류:', data_sub_data)
-                        data_sub_data = re.sub(r'^파일:', ':파일:', data_sub_data)
-
-                        include_change_list[data_sub_name] = data_sub_data
-                    else:
-                        include_name = for_a
-
-                include_name_org = include_name
-                
-                include_name = self.get_tool_data_restore(include_name, do_type = 'slash')
-                include_name = html.unescape(include_name)
-
-                # load include db data
-                self.curs.execute(db_change("select data from data where title = ?"), [include_name])
-                db_data = self.curs.fetchall()
-                if db_data:
-                    self.data_backlink += [[self.doc_name, include_name, 'include']]
-                    include_data = db_data[0][0].replace('\r', '')
-
-                    # include link func
-                    if ip_or_user(self.ip) == 0:
-                        self.curs.execute(db_change('select data from user_set where name = "main_css_include_link" and id = ?'), [self.ip])
-                        db_data = self.curs.fetchall()
-                        include_set_data = db_data[0][0] if db_data else 'normal'
-                    else:
-                        include_set_data = flask.session['main_css_include_link'] if 'main_css_include_link' in flask.session else 'normal'
-
-                    include_link = ''
-                    if include_set_data == 'use':
-                        include_link = '<div><a href="/w/' + url_pas(include_name) + '">(' + include_name_org + ')</a></div>'
-
-                    # parameter replace
-                    include_data = re.sub(r'(\\+)?@([ㄱ-힣a-zA-Z]+)=((?:\\@|[^@\n])+)@', do_render_include_default_sub, include_data)
-                    include_data = re.sub(r'(\\+)?@([ㄱ-힣a-zA-Z]+)@', do_render_include_default_sub, include_data)
-
-                    # remove include
-                    include_data = re.sub(include_regex, '', include_data)
-                    include_data = re.sub('^\n+', '', include_data)
-
-                    self.data_include += [[self.doc_include + 'opennamu_include_' + str(include_num), include_name, include_data, 'style="display: inline;"']]
-
-                    data_name = self.get_tool_data_storage('' + \
-                        include_link + \
-                        '<div id="' + self.doc_include + 'opennamu_include_' + str(include_num) + '"></div>' + \
-                    '', '', match_org)
+                if self.doc_include != '':
+                    self.render_data = re.sub(include_regex, '', self.render_data, 1)
                 else:
-                    self.data_backlink += [[self.doc_name, include_name, 'no']]
+                    match_org = match.group(0)
+                    match = match.groups()
 
-                    include_link = '<div><a class="opennamu_not_exist_link" href="/w/' + url_pas(include_name) + '">(' + include_name_org + ')</a></div>'
+                    macro_split_regex = r'(?:^|,) *([^,]+)'
+                    macro_split_sub_regex = r'^([^=]+) *= *(.*)$'
 
-                    data_name = self.get_tool_data_storage(include_link, '', match_org)
+                    include_name = ''
 
-                self.render_data = re.sub(include_regex, '<' + data_name + '></' + data_name + '>', self.render_data, 1)
+                    data = re.findall(macro_split_regex, match[0])
+                    for for_a in data:
+                        data_sub = re.search(macro_split_sub_regex, for_a)
+                        if data_sub:
+                            data_sub = data_sub.groups()
+                            
+                            data_sub_name = data_sub[0]
+                            data_sub_data = self.get_tool_data_restore(data_sub[1], do_type = 'slash')
+                            
+                            data_sub_data = re.sub(r'^분류:', ':분류:', data_sub_data)
+                            data_sub_data = re.sub(r'^파일:', ':파일:', data_sub_data)
+
+                            include_change_list[data_sub_name] = data_sub_data
+                        else:
+                            include_name = for_a
+
+                    include_name_org = include_name
+                    
+                    include_name = self.get_tool_data_restore(include_name, do_type = 'slash')
+                    include_name = html.unescape(include_name)
+
+                    # load include db data
+                    self.curs.execute(db_change("select data from data where title = ?"), [include_name])
+                    db_data = self.curs.fetchall()
+                    if db_data:
+                        self.data_backlink += [[self.doc_name, include_name, 'include']]
+                        include_data = db_data[0][0].replace('\r', '')
+
+                        # include link func
+                        if ip_or_user(self.ip) == 0:
+                            self.curs.execute(db_change('select data from user_set where name = "main_css_include_link" and id = ?'), [self.ip])
+                            db_data = self.curs.fetchall()
+                            include_set_data = db_data[0][0] if db_data else 'normal'
+                        else:
+                            include_set_data = self.flask_session['main_css_include_link'] if 'main_css_include_link' in self.flask_session else 'normal'
+
+                        include_link = ''
+                        if include_set_data == 'use':
+                            include_link = '<div><a href="/w/' + url_pas(include_name) + '">(' + include_name_org + ')</a></div>'
+
+                        # parameter replace
+                        include_data = re.sub(r'(\\+)?@([ㄱ-힣a-zA-Z]+)=((?:\\@|[^@\n])+)@', do_render_include_default_sub, include_data)
+                        include_data = re.sub(r'(\\+)?@([ㄱ-힣a-zA-Z]+)@', do_render_include_default_sub, include_data)
+
+                        # remove end br
+                        include_data = re.sub('^\n+', '', include_data)
+
+                        self.data_include += [[self.doc_include + 'opennamu_include_' + str(include_num), include_name, include_data, 'style="display: inline;"']]
+
+                        data_name = self.get_tool_data_storage('' + \
+                            include_link + \
+                            '<div id="' + self.doc_include + 'opennamu_include_' + str(include_num) + '"></div>' + \
+                        '', '', match_org)
+                    else:
+                        self.data_backlink += [[self.doc_name, include_name, 'no']]
+
+                        include_link = '<div><a class="opennamu_not_exist_link" href="/w/' + url_pas(include_name) + '">(' + include_name_org + ')</a></div>'
+
+                        data_name = self.get_tool_data_storage(include_link, '', match_org)
+
+                    self.render_data = re.sub(include_regex, '<' + data_name + '></' + data_name + '>', self.render_data, 1)
 
             include_count_max -= 1
 
@@ -1784,7 +1803,7 @@ class class_do_render_namumark:
                     db_data = self.curs.fetchall()
                     category_set_data = db_data[0][0] if db_data else 'normal'
                 else:
-                    category_set_data = flask.session['main_css_category_set'] if 'main_css_category_set' in flask.session else 'normal'
+                    category_set_data = self.flask_session['main_css_category_set'] if 'main_css_category_set' in self.flask_session else 'normal'
 
                 if category_set_data == 'normal':
                     if re.search(r'<footnote_category>', self.render_data):
@@ -1866,7 +1885,7 @@ class class_do_render_namumark:
                 db_data = self.curs.fetchall()
                 toc_set_data = db_data[0][0] if db_data else 'normal'
             else:
-                toc_set_data = flask.session['main_css_toc_set'] if 'main_css_toc_set' in flask.session else 'normal'
+                toc_set_data = self.flask_session['main_css_toc_set'] if 'main_css_toc_set' in self.flask_session else 'normal'
 
             self.render_data = re.sub(toc_search_regex, '', self.render_data)
             if toc_set_data != 'off':
@@ -1912,8 +1931,8 @@ class class_do_render_namumark:
         self.do_render_slash()
         self.do_render_redirect()
         if self.data_redirect == 0:
-            self.do_render_include()
             self.do_render_middle()
+            self.do_render_include()
             self.do_render_math()
             self.do_render_table()
             self.do_render_list()
@@ -1928,7 +1947,6 @@ class class_do_render_namumark:
         self.do_render_last()
 
         # print(self.data_temp_storage)
-        # print(self.render_data)
 
         return [
             self.render_data, # html

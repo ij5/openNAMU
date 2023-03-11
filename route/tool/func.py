@@ -134,7 +134,10 @@ def get_init_set_list(need = 'all'):
         }
     }
     
-    return init_set_list
+    if need == 'all':
+        return init_set_list
+    else:
+        return init_set_list[need]
 
 class get_db_connect:
     # 임시 DB 커넥션 동작 구조
@@ -305,6 +308,8 @@ class class_check_json:
 
 def get_db_table_list():
     # Init-Create_DB
+    # DB 테이블 구조
+    
     # --이거 개편한다더니 도대체 언제?--
     create_data = {}
 
@@ -629,6 +634,25 @@ def update(ver_num, set_data):
         curs.execute(db_change(
             "update other set coverage = '' where coverage is null"
         ))
+
+    if ver_num < 3500358:
+        curs.execute(db_change("drop index history_index"))
+        curs.execute(db_change("create index history_index on history (title, ip)"))
+
+    if ver_num < 3500359:
+        # 마지막 편집 따로 기록하도록
+        # create_data['data_set'] = ['doc_name', 'doc_rev', 'set_name', 'set_data']
+        print("Update 3500359...")
+
+        curs.execute(db_change("select title from data"))
+        db_data = curs.fetchall()
+        for for_a in db_data:
+            curs.execute(db_change("select date from history where title = ? order by date desc limit 1"), [for_a[0]])
+            db_data_2 = curs.fetchall()
+            if db_data_2:
+                curs.execute(db_change("insert into data_set (doc_name, doc_rev, set_name, set_data) values (?, '', 'last_edit', ?)"), [for_a[0], db_data_2[0][0]])
+
+        print("Update 3500359 complete")
 
     conn.commit()
     
@@ -1037,6 +1061,8 @@ def skin_check(set_n = 0):
     else:
         if 'skin' in flask.session:
             user_need_skin = flask.session['skin']
+
+    user_need_skin = '' if user_need_skin == 'default' else user_need_skin
 
     if user_need_skin == '':
         curs.execute(db_change('select data from other where name = "skin"'))
@@ -1695,7 +1721,7 @@ def acl_check(name = 'test', tool = '', topic_num = '1'):
                 return 0
     
             return 1
-    elif tool == 'document_edit' or tool == 'document_move' or tool == 'document_delete':
+    elif tool in ['document_edit', 'document_move', 'document_delete']:
         if acl_check(name, '') == 1:
             return 1
     elif tool == 'topic':
@@ -1705,7 +1731,7 @@ def acl_check(name = 'test', tool = '', topic_num = '1'):
 
     if tool in ['topic']:
         end = 3
-    elif tool in ['render', 'vote', '']:
+    elif tool in ['render', 'vote', '', 'document_edit', 'document_move', 'document_delete']:
         end = 2
     else:
         end = 1
@@ -1729,21 +1755,36 @@ def acl_check(name = 'test', tool = '', topic_num = '1'):
 
             num = 5
         elif tool == 'document_move':
-            curs.execute(db_change(
-                "select data from acl where title = ? and type = 'document_move_acl'"
-            ), [name])
+            if i == 0:
+                curs.execute(db_change(
+                    "select data from acl where title = ? and type = 'document_move_acl'"
+                ), [name])
+            else:
+                curs.execute(db_change(
+                    'select data from other where name = "document_move_acl"'
+                ))
 
             num = 5
         elif tool == 'document_edit':
-            curs.execute(db_change(
-                "select data from acl where title = ? and type = 'document_edit_acl'"
-            ), [name])
+            if i == 0:
+                curs.execute(db_change(
+                    "select data from acl where title = ? and type = 'document_edit_acl'"
+                ), [name])
+            else:
+                curs.execute(db_change(
+                    'select data from other where name = "document_edit_acl"'
+                ))
 
             num = 5
         elif tool == 'document_delete':
-            curs.execute(db_change(
-                "select data from acl where title = ? and type = 'document_delete_acl'"
-            ), [name])
+            if i == 0:
+                curs.execute(db_change(
+                    "select data from acl where title = ? and type = 'document_delete_acl'"
+                ), [name])
+            else:
+                curs.execute(db_change(
+                    'select data from other where name = "document_delete_acl"'
+                ))
 
             num = 5
         elif tool == 'topic':
@@ -1982,7 +2023,10 @@ def ip_pas(raw_ip, type_data = 0):
                 else:
                     ip = ip.exploded
                     ip = re.sub(r'\.([^.]*)\.([^.]*)$', '.*.*', ip)
-                    
+                
+                # ip = hashlib.sha3_224(bytes(raw_ip, 'utf-8')).hexdigest()
+                # ip = ip[0:4] + '-' + ip[4:8] + '-' + ip[8:12] + '-' + ip[12:16]
+
                 change_ip = 1
             except:
                 ip = raw_ip
@@ -2303,6 +2347,7 @@ def ban_insert(name, end, why, login, blocker, type_d = None):
 
 def history_plus(title, data, date, ip, send, leng, t_check = '', mode = ''):
     curs = conn.cursor()
+    # 여기 좀 느린 듯
     
     curs.execute(db_change('select data from other where name = "history_recording_off"'))
     db_data = curs.fetchall()
