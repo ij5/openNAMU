@@ -25,6 +25,7 @@ def db_change(data):
         data = data.replace('random()', 'rand()')
         data = data.replace('%', '%%')
         data = data.replace('?', '%s')
+        data = data.replace('collate nocase', 'collate utf8mb4_general_ci')
 
     return data
 
@@ -58,10 +59,29 @@ def ip_or_user(data = ''):
         return 0
 
 def url_pas(data):
-    return urllib.parse.quote(data).replace('/','%2F')
+    data = re.sub(r'^\.', '\\\\.', data)
+    data = urllib.parse.quote(data)
+    data = data.replace('/','%2F')
+
+    return data
 
 def sha224_replace(data):
     return hashlib.sha224(bytes(data, 'utf-8')).hexdigest()
 
 def md5_replace(data):
     return hashlib.md5(data.encode()).hexdigest()
+
+def get_main_skin_set(curs, flask_session, set_name, ip):
+    if ip_or_user(ip) == 0:
+        curs.execute(db_change('select data from user_set where name = ? and id = ?'), [set_name, ip])
+        db_data = curs.fetchall()
+        set_data = db_data[0][0] if db_data else 'default'
+    else:
+        set_data = flask_session[set_name] if set_name in flask_session and flask_session[set_name] != '' else 'default'
+
+    if set_data == 'default':
+        curs.execute(db_change('select data from other where name = ?'), [set_name])
+        db_data = curs.fetchall()
+        set_data = db_data[0][0] if db_data and db_data[0][0] != '' else 'default'
+
+    return set_data

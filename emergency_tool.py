@@ -140,27 +140,11 @@ elif what_i_do == '6':
     curs.execute(db_change("update other set data = ? where name = 'skin'"), [skin])
 elif what_i_do == '7':
     print('----')
-    print('1. sha256')
-    print('2. sha3')
-
-    print('----')
-    what_i_do = input('Select : ')
-
-    print('----')
     user_name = input('User name : ')
 
     print('----')
     user_pw = input('User password : ')
-
-    if what_i_do == '1':
-        hashed = hashlib.sha256(bytes(user_pw, 'utf-8')).hexdigest()
-    elif what_i_do == '2':
-        if sys.version_info < (3, 6):
-            hashed = sha3.sha3_256(bytes(user_pw, 'utf-8')).hexdigest()
-        else:
-            hashed = hashlib.sha3_256(bytes(user_pw, 'utf-8')).hexdigest()
-    else:
-        raise ValueError(what_i_do)
+    hashed = pw_encode(user_pw)
 
     curs.execute(db_change("update user_set set data = ? where id = ? and name = 'pw'"), [
         hashed,
@@ -255,14 +239,16 @@ elif what_i_do == '20':
     print('----')
     domain = input('Domain (EX : 2du.pythonanywhere.com) : ')
 
-    curs.execute(db_change("update other set data = ? where name = 'domain'"), [domain])
+    curs.execute(db_change('delete from other where name = "domain"'))
+    curs.execute(db_change('insert into other (name, data, coverage) values ("domain", ?, "")'), [domain])
 elif what_i_do == '21':
     print('----')
     tls_v = input('TLS (http) [http, https] : ')
     if not tls_v in ['http', 'https']:
         tls_v = 'http'
 
-    curs.execute(db_change("update other set data = ? where name = 'http_select'"), [tls_v])
+    curs.execute(db_change('delete from other where name = "http_select"'))
+    curs.execute(db_change('insert into other (name, data, coverage) values ("http_select", ?, "")'), [tls_v])
 else:
     raise ValueError(what_i_do)
 

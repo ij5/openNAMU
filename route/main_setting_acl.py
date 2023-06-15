@@ -1,6 +1,6 @@
 from .tool.func import *
 
-def main_func_setting_acl():
+def main_setting_acl():
     with get_db_connect() as conn:
         curs = conn.cursor()
 
@@ -13,7 +13,9 @@ def main_func_setting_acl():
             6 : 'vote_acl',
             7 : 'document_edit_acl',
             8 : 'document_move_acl',
-            9 : 'document_delete_acl'
+            9 : 'document_delete_acl',
+            10 : 'slow_edit_acl',
+            11 : 'edit_bottom_compulsion_acl'
         }
 
         if flask.request.method == 'POST':
@@ -44,7 +46,6 @@ def main_func_setting_acl():
                     d_list[i] = sql_d[0][0]
                 else:
                     curs.execute(db_change('insert into other (name, data, coverage) values (?, ?, "")'), [i_list[i], 'normal'])
-
                     d_list[i] = 'normal'
 
             conn.commit()
@@ -72,42 +73,40 @@ def main_func_setting_acl():
                         
                         <h2>''' + load_lang('document_acl') + '''</h2>
                         <select ''' + disable + ''' name="edit">''' + acl_div[0] + '''</select>
-                        <hr class="main_hr">
 
                         <h3>''' + load_lang('document_edit_acl') + '''</h3>
                         <select ''' + disable + ''' name="document_edit_acl">''' + acl_div[6] + '''</select>
-                        <hr class="main_hr">
 
                         <h3>''' + load_lang('document_move_acl') + '''</h3>
                         <select ''' + disable + ''' name="document_move_acl">''' + acl_div[7] + '''</select>
-                        <hr class="main_hr">
 
                         <h3>''' + load_lang('document_delete_acl') + '''</h3>
                         <select ''' + disable + ''' name="document_delete_acl">''' + acl_div[8] + '''</select>
-                        <hr class="main_hr">
                         
                         <h2>''' + load_lang('discussion_acl') + '''</h2>
                         <select ''' + disable + ''' name="discussion">''' + acl_div[1] + '''</select>
-                        <hr class="main_hr">
                         
                         <h2>''' + load_lang('upload_acl') + '''</h2>
                         <select ''' + disable + ''' name="upload_acl">''' + acl_div[2] + '''</select>
-                        <hr class="main_hr">
                         
                         <h2>''' + load_lang('view_acl') + '''</h2>
                         <select ''' + disable + ''' name="all_view_acl">''' + acl_div[3] + '''</select>
-                        <hr class="main_hr">
                         
                         <h2>''' + load_lang('many_upload_acl') + '''</h2>
                         <select ''' + disable + ''' name="many_upload_acl">''' + acl_div[4] + '''</select>
-                        <hr class="main_hr">
                         
                         <h2>''' + load_lang('vote_acl') + '''</h2>
                         <select ''' + disable + ''' name="vote_acl">''' + acl_div[5] + '''</select>
+
+                        <h2>''' + load_lang('slow_edit_acl') + '''</h2>
+                        <select ''' + disable + ''' name="slow_edit_acl">''' + acl_div[9] + '''</select>
+
+                        <h2>''' + load_lang('edit_bottom_compulsion_acl') + '''</h2>
+                        <select ''' + disable + ''' name="edit_bottom_compulsion_acl">''' + acl_div[10] + '''</select>
                         
                         <hr class="main_hr">
                         <button id="opennamu_save_button" type="submit">''' + load_lang('save') + '''</button>
                     </form>
                 '''),
-                menu = [['setting', load_lang('return')]]
+                menu = [['setting/main', load_lang('return')]]
             ))

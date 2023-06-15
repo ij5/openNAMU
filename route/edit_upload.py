@@ -91,7 +91,9 @@ def edit_upload():
                     ''
 
                 curs.execute(db_change("insert into data (title, data) values (?, ?)"), ['file:' + name, file_d])
-                curs.execute(db_change("insert into acl (title, data, type) values (?, 'admin', 'decu')"), ['file:' + name])
+
+                curs.execute(db_change('select data from other where name = "count_all_title"'))
+                curs.execute(db_change("update other set data = ? where name = 'count_all_title'"), [str(int(curs.fetchall()[0][0]) + 1)])
 
                 render_set(
                     doc_name = 'file:' + name,
@@ -149,7 +151,7 @@ def edit_upload():
                             ''' + license_list + '''
                         </select>
                         <hr class="main_hr">
-                        <textarea class="opennamu_textarea_200" placeholder="''' + load_lang('other') + '''" name="f_lice">''' + upload_default + '''</textarea>
+                        <textarea class="opennamu_textarea_100" placeholder="''' + load_lang('other') + '''" name="f_lice">''' + upload_default + '''</textarea>
                         <hr class="main_hr">
                         ''' + captcha_get() + '''
                         <button id="opennamu_save_button" type="submit">''' + load_lang('save') + '''</button>

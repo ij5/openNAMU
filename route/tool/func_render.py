@@ -1,4 +1,5 @@
-from .func_render_namumark import *
+from .func_tool import *
+from .func_render_namumark import class_do_render_namumark
 
 # 커스텀 마크 언젠간 다시 추가 예정
 
@@ -66,9 +67,9 @@ class class_do_render:
                 curs.execute(db_change("delete from back where title = ? and type = 'no'"), [doc_name])
 
             self.conn.commit()
-        else:
-            return [
-                data_end[0], 
-                data_end[1],
-                data_end[2]
-            ]
+
+        return [
+            data_end[0], 
+            data_end[1],
+            data_end[2]
+        ]

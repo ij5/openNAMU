@@ -1,6 +1,6 @@
 from .tool.func import *
 
-def give_acl_2(name):
+def view_acl(name):
     with get_db_connect() as conn:
         curs = conn.cursor()
 
@@ -73,7 +73,7 @@ def give_acl_2(name):
                     name, markup_data
                 ])
 
-            if db_data[0][0] != markup_data:
+            if not db_data or db_data[0][0] != markup_data:
                 curs.execute(db_change("select data from data where title = ?"), [name])
                 db_data_2 = curs.fetchall()
                 if db_data_2:
@@ -149,6 +149,7 @@ def give_acl_2(name):
                     <li>30_day : ''' + load_lang('30_day_acl') + '''</li>
                     <li>ban_admin : ''' + load_lang('ban_admin_acl') + '''</li>
                     <li>not_all : ''' + load_lang('not_all_acl') + '''</li>
+                    <li>90_day : ''' + load_lang('90_day_acl') + '''</li>
                 </ul>
                 <hr class="main_hr">
                 <h2>''' + load_lang('markup') + '''</h2>
@@ -185,6 +186,6 @@ def give_acl_2(name):
                 menu = [
                     ['w/' + url_pas(name), load_lang('document')], 
                     ['manager', load_lang('admin')], 
-                    ['admin_log?search=' + url_pas('acl (' + name + ')'), load_lang('acl_record')]
+                    ['list/admin/auth_use/' + url_pas('acl (' + name + ')') + '/1', load_lang('acl_record')]
                 ]
             ))
