@@ -3,6 +3,11 @@ html, body {
     color: white;
 }
 
+.tooltip {
+  background-color: black;
+  color: white;
+}
+
 a:hover {
     color: cornflowerblue;
 }
