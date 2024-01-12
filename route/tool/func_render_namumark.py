@@ -1279,7 +1279,7 @@ class class_do_render_namumark:
                         self.data_footnote[footnote_name]['list'] = [footnote_num_str]
                         self.data_footnote[footnote_name]['data'] = footnote_text_data
 
-                        data_name = self.get_tool_data_storage('<sup><a fn_target="' + self.doc_include + 'fn_' + footnote_num_str + '" id="' + self.doc_include + 'rfn_' + footnote_num_str + '" href="#' + self.doc_include + 'fn_' + footnote_num_str + '">(' + footnote_name + footnote_name_add + ')</a></sup>', '', footnote_data_org)
+                        data_name = self.get_tool_data_storage('<sup class="rfn"><a fn_target="' + self.doc_include + 'fn_' + footnote_num_str + '" id="' + self.doc_include + 'rfn_' + footnote_num_str + '" href="#' + self.doc_include + 'fn_' + footnote_num_str + '">(' + footnote_name + footnote_name_add + ')</a></sup>', '', footnote_data_org)
 
                     self.render_data = re.sub(footnote_regex, '<' + data_name + '></' + data_name + '>', self.render_data, 1)
 
