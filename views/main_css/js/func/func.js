@@ -27,7 +27,7 @@ const postprocessing = ()=>{
                 doubleclick = false;
             } else {
                 doubleclick = dref;
-                tooltip.innerHTML = document.getElementById(dref).innerHTML;
+                tooltip.innerHTML = document.getElementById(dref + '_title').innerHTML;
                 tooltip.style.position = 'fixed';
                 tooltip.style.display = 'block';
                 let coords = ev.target.getBoundingClientRect();
