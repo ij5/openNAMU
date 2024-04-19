@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
     const rfns = document.getElementsByClassName('rfn')
     document.addEventListener('click', (ev)=>{
-        if(!ev.target.id.startsWith('rfn') && tooltip.style.display !== 'none'){
+        if(!ev.target.id.includes('rfn') && tooltip.style.display !== 'none'){
             tooltip.style.display = 'none';
             doubleclick = false;
         }
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
                 doubleclick = false;
             } else {
                 doubleclick = dref;
-                tooltip.innerHTML = document.getElementById('d'+dref).innerHTML;
+                tooltip.innerHTML = document.getElementById(dref).innerHTML;
                 tooltip.style.position = 'fixed';
                 tooltip.style.display = 'block';
                 let coords = ev.target.getBoundingClientRect();

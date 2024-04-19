@@ -1479,7 +1479,7 @@ class class_do_render_namumark:
 
                     if footnote_set == 'spread':
                         data_name = self.get_tool_data_storage(
-                            '<sup>' + \
+                            '<sup class="rfn">' + \
                                 '<a fn_target="' + fn + '" id="' + rfn + '" href="javascript:void(0);">(' + foot_v_name + ')</a>' + \
                             '</sup>' + \
                             '<span class="opennamu_spead_footnote" id="' + rfn + '_load" style="display: none;"></span>',
@@ -1489,7 +1489,7 @@ class class_do_render_namumark:
                         self.render_data_js += 'document.getElementById("' + rfn + '").addEventListener("click", function() { opennamu_do_footnote_spread("' + rfn + '", "' + fn + '"); });\n'
                     elif footnote_set == 'popup':
                         data_name = self.get_tool_data_storage(
-                            '<sup>' + \
+                            '<sup class="rfn">' + \
                                 '<a fn_target="' + fn + '" id="' + rfn + '" href="javascript:void(0);">(' + foot_v_name + ')</a>' + \
                             '</sup>' + \
                             '<span class="opennamu_spead_footnote" id="' + rfn + '_load" style="display: none;"></span>',
@@ -1500,7 +1500,7 @@ class class_do_render_namumark:
                     elif footnote_set == 'popover':
                         data_name = self.get_tool_data_storage(
                             '<span id="' + rfn + '_over">' + \
-                                '<sup>' + \
+                                '<sup class="rfn">' + \
                                     '<a fn_target="' + fn + '" id="' + rfn + '" href="javascript:void(0);">(' + foot_v_name + ')</a>' + \
                                 '</sup>' + \
                                 '<span class="opennamu_popup_footnote" id="' + rfn + '_load" style="display: none;"></span>' + \
@@ -1510,7 +1510,7 @@ class class_do_render_namumark:
                         )
                         self.render_data_js += 'document.getElementById("' + rfn + '_over").addEventListener("click", function() { opennamu_do_footnote_popover("' + rfn + '", "' + fn + '"); });\n'
                     else:
-                        data_name = self.get_tool_data_storage('<sup><a fn_target="' + fn + '" id="' + rfn + '" href="#' + fn + '">(' + foot_v_name + ')</a></sup>', '', footnote_data_org)
+                        data_name = self.get_tool_data_storage('<sup class="rfn"><a fn_target="' + fn + '" id="' + rfn + '" href="#' + fn + '">(' + foot_v_name + ')</a></sup>', '', footnote_data_org)
 
                     self.render_data = re.sub(footnote_regex, '<' + data_name + '></' + data_name + '>', self.render_data, 1)
 
