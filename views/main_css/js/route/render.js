@@ -1,15 +1,94 @@
 "use strict";
 
+// https://css-tricks.com/how-to-animate-the-details-element/
+class Accordion {
+    constructor(el) {
+        this.el = el;
+        this.summary = el.querySelector('summary');
+        this.content = el.querySelector('.opennamu_folding');
+    
+        this.animation = null;
+        this.isClosing = false;
+        this.isExpanding = false;
+        this.summary.addEventListener('click', (e) => this.onClick(e));
+    }
+  
+    onClick(e) {
+        e.preventDefault();
+        this.el.style.overflow = 'hidden';
+        if(this.isClosing || !this.el.open) {
+            this.open();
+        } else if(this.isExpanding || this.el.open) {
+            this.shrink();
+        }
+    }
+  
+    shrink() {
+        this.isClosing = true;
+        
+        const startHeight = `${this.el.offsetHeight}px`;
+        const endHeight = `${this.summary.offsetHeight}px`;
+        
+        if(this.animation) {
+            this.animation.cancel();
+        }
+        
+        this.animation = this.el.animate({
+            height: [startHeight, endHeight]
+        }, {
+            duration: 200,
+            easing: 'ease-out'
+        });
+        
+        this.animation.onfinish = () => this.onAnimationFinish(false);
+        this.animation.oncancel = () => this.isClosing = false;
+    }
+  
+    open() {
+        this.el.style.height = `${this.el.offsetHeight}px`;
+        this.el.open = true;
+        window.requestAnimationFrame(() => this.expand());
+    }
+  
+    expand() {
+        this.isExpanding = true;
+        const startHeight = `${this.el.offsetHeight}px`;
+        const endHeight = `${this.summary.offsetHeight + this.content.offsetHeight}px`;
+        
+        if(this.animation) {
+            this.animation.cancel();
+        }
+        
+        this.animation = this.el.animate({
+            height: [startHeight, endHeight]
+        }, {
+            duration: 200,
+            easing: 'ease-out'
+        });
+        this.animation.onfinish = () => this.onAnimationFinish(true);
+        this.animation.oncancel = () => this.isExpanding = false;
+    }
+  
+    onAnimationFinish(open) {
+        this.el.open = open;
+        this.animation = null;
+        this.isClosing = false;
+        this.isExpanding = false;
+        this.el.style.height = this.el.style.overflow = '';
+    }
+}
+
 function opennamu_heading_folding(data, element = '') {
     let fol = document.getElementById(data);
     if(fol.style.display === '' || fol.style.display === 'inline-block' || fol.style.display === 'block') {
         document.getElementById(data).style.display = 'none';
+        document.getElementById(data + '_sub').style.opacity = '0.5';
     } else {
         document.getElementById(data).style.display = 'block';
+        document.getElementById(data + '_sub').style.opacity = '1';
     }
     
     if(element !== '') {
-        console.log(element.innerHTML);
         if(element.innerHTML !== '⊖') {
             element.innerHTML = '⊖';
         } else {
@@ -55,7 +134,7 @@ function opennamu_do_render_html(name = '') {
                         link_data = '';
                     }
 
-                    return '<' + t_data[key] + ' id="out_link" href="' + link_data + '">' + in_data_2 + '</' + t_data[key] + '>';
+                    return '<' + t_data[key] + ' class="opennamu_link_out" href="' + link_data + '">' + in_data_2 + '</' + t_data[key] + '>';
                 } else if(t_data[key] === 'iframe') {
                     let src_data = in_data.match(/ src=['"]([^'"]*)['"]/);
                     if(src_data) {
@@ -129,10 +208,14 @@ function opennamu_do_footnote_spread(set_name, load_name) {
     }
 }
 
-function opennamu_do_footnote_popover(set_name, load_name) {
+function opennamu_do_footnote_popover(set_name, load_name, sub_obj = undefined) {
     if(document.getElementById(set_name + '_load').style.display === 'none') {
-        document.getElementById(set_name).title = '';
-        document.getElementById(set_name + '_load').innerHTML = '<a href="#' + load_name + '">(Go)</a> ' + document.getElementById(load_name + '_title').innerHTML;
+        if(sub_obj !== undefined) {
+            document.getElementById(set_name + '_load').innerHTML = document.getElementById(sub_obj).innerHTML; 
+        } else {
+            document.getElementById(set_name).title = '';
+            document.getElementById(set_name + '_load').innerHTML = '<a href="#' + load_name + '">(Go)</a> ' + document.getElementById(load_name + '_title').innerHTML;   
+        }
         document.getElementById(set_name + '_load').style.display = "inline-block";
 
         let width = document.getElementById(set_name + '_load').clientWidth;
@@ -160,4 +243,75 @@ function opennamu_do_footnote_popover(set_name, load_name) {
     } else {
         document.getElementById(set_name + '_load').style.display = "none";
     }
+}
+
+function opennamu_do_category_spread() {
+    if(document.getElementsByClassName('opennamu_render_complete')) {
+        document.getElementsByClassName('opennamu_render_complete')[0].innerHTML = '' +
+            '<style>.opennamu_category_button { display: none; } .opennamu_category { white-space: pre-wrap; overflow-x: unset; text-overflow: unset; }</style>' +
+        '' + document.getElementsByClassName('opennamu_render_complete')[0].innerHTML;
+    }
+}
+
+function opennamu_do_include(name, render_name, to_obj, option_obj) {
+    let option = {};
+    if(option_obj !== '') {
+        if(document.getElementById(option_obj)) {
+            option = document.getElementById(option_obj).innerHTML;
+            option = decodeURIComponent(option);
+        }
+    }
+
+    fetch("/api/raw/" + opennamu_do_url_encode(name)).then(function(res) {
+        return res.json();
+    }).then(function(data) {
+        if(data["data"]) {
+            opennamu_do_render(to_obj, data["data"], render_name, 'include', option);
+            document.getElementById(option_obj).style.display = "inline";
+        }
+    });
+}
+
+function opennamu_do_toc() {
+    let data = document.getElementById('opennamu_render_complete');
+    let h_tag = data.querySelectorAll("h1, h2, h3, h4, h5, h6");
+    let toc_count = [0, 0, 0, 0, 0, 0];
+    let toc_html = '';
+
+    for(let for_a = 0; for_a < h_tag.length; for_a++) {
+        let tag = h_tag[for_a].tagName.toLowerCase();
+        tag = tag.replace('h', '');
+        tag = Number(tag) - 1;
+
+        for(let for_b = tag + 1; for_b < 6; for_b++) {
+            toc_count[for_b] = 0;
+        }
+
+        toc_count[tag] += 1;
+
+        let toc_string = '';
+        let add_on = false;
+        for(let for_b = 5; for_b >= 0; for_b--) {
+            if(add_on == false && toc_count[for_b] != 0) {
+                add_on = true;
+            }
+
+            if(add_on == true) {
+                toc_string = String(toc_count[for_b]) + '.' + toc_string;
+            }
+        }
+
+        toc_string = toc_string.replace(/^(0\.)+/, '');
+
+        let toc_string_sub =  toc_string.replace(/\.$/, '');
+        let toc_margin = '<span style="margin-left: 10px;"></span>'.repeat(toc_string_sub.split('.').length - 1);
+
+        toc_html += toc_margin + '<a href="#s-' + toc_string_sub + '">' + toc_string + '</a> ' + h_tag[for_a].innerHTML + '<br>';
+        h_tag[for_a].innerHTML = '<a id="s-' + toc_string_sub + '" href="#toc">' + toc_string + '</a> ' + h_tag[for_a].innerHTML;
+    }
+
+    data.innerHTML = data.innerHTML.replace(/(<h[1-6]>)/, '<div class="opennamu_toc"></div>$1');
+    data.innerHTML = data.innerHTML.replace(/<div class="opennamu_toc"><\/div>/g, function(match) {
+        return '<div class="opennamu_TOC" id="toc"><div class="opennamu_TOC_title">TOC</div><br>' + toc_html + '</div>';
+    });
 }

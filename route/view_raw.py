@@ -1,69 +1,116 @@
 from .tool.func import *
 
-def view_raw_2(name = None, topic_num = None, num = None, doc_acl = 0):
+from .api_bbs_w_post import api_bbs_w_post
+from .api_bbs_w_comment_one import api_bbs_w_comment_one
+
+def view_raw(name = '', topic_num = '', num = '', doc_acl = 0, bbs_num = '', post_num = '', comment_num = ''):
     with get_db_connect() as conn:
         curs = conn.cursor()
+        
+        bbs_num_str = str(bbs_num)
+        post_num_str = str(post_num)
 
-        if topic_num:
+        if bbs_num != '' and post_num != '':
+            if acl_check(conn, bbs_num_str, 'bbs_view') == 1:
+                return re_error(conn, '/ban')
+                    
+            name = ''
+        elif topic_num != '':
             topic_num = str(topic_num)
             
-            if acl_check('', 'topic_view', topic_num) == 1:
-                return re_error('/ban')
+            if acl_check(conn, '', 'topic_view', topic_num) == 1:
+                return re_error(conn, '/ban')
         else:
-            if acl_check(name, 'render') == 1:
-                return re_error('/ban')
+            if acl_check(conn, name, 'render') == 1:
+                return re_error(conn, '/ban')
 
         if num:
             num = str(num)
 
         v_name = name
         p_data = ''
-        sub = ' (' + load_lang('raw') + ')'
+        sub = '(' + get_lang(conn, 'raw') + ')'
 
-        if not topic_num and num:
+        if bbs_num != '' and post_num != '':
+            sub += ' (' + get_lang(conn, 'bbs') + ')'
+            menu = [['bbs/tool/' + url_pas(bbs_num_str) + '/' + url_pas(post_num_str), get_lang(conn, 'return')]]
+            
+            if comment_num != '':
+                sub += ' (' + comment_num + ')'
+        elif topic_num == '' and num != '':
             curs.execute(db_change("select title from history where title = ? and id = ? and hide = 'O'"), [name, num])
-            if curs.fetchall() and admin_check(6) != 1:
-                return re_error('/error/3')
+            if curs.fetchall() and admin_check(conn, 6) != 1:
+                return re_error(conn, '/error/3')
 
             curs.execute(db_change("select data from history where title = ? and id = ?"), [name, num])
 
             sub += ' (r' + num + ')'
 
-            menu = [['history/' + url_pas(name), load_lang('history')]]
-        elif topic_num:
-            if admin_check(6) != 1:
+            menu = [['history_tool/' + url_pas(num) + '/' + url_pas(name), get_lang(conn, 'return')]]
+        elif topic_num != '':
+            if admin_check(conn, 6) != 1:
                 curs.execute(db_change("select data from topic where id = ? and code = ? and block = ''"), [num, topic_num])
             else:
                 curs.execute(db_change("select data from topic where id = ? and code = ?"), [num, topic_num])
 
-            v_name = load_lang('discussion_raw')
+            v_name = get_lang(conn, 'discussion_raw')
             sub = ' (#' + num + ')'
 
             menu = [
-                ['thread/' + topic_num + '#' + num, load_lang('discussion')], 
-                ['thread/' + topic_num + '/comment/' + num + '/tool', load_lang('return')]
+                ['thread/' + topic_num + '#' + num, get_lang(conn, 'discussion')], 
+                ['thread/' + topic_num + '/comment/' + num + '/tool', get_lang(conn, 'return')]
             ]
         else:
             curs.execute(db_change("select data from data where title = ?"), [name])
 
-            menu = [['w/' + url_pas(name), load_lang('return')]]
+            menu = [['w/' + url_pas(name), get_lang(conn, 'return')]]
 
-        data = curs.fetchall()
+        if bbs_num != '' and post_num != '':
+            if comment_num != '':
+                data = json.loads(api_bbs_w_comment_one(bbs_num_str + '-' + post_num_str + '-' + comment_num).data)
+                sub_data = json.loads(api_bbs_w_post(bbs_num_str + '-' + post_num_str).data)
+            else:
+                data = json.loads(api_bbs_w_post(bbs_num_str + '-' + post_num_str).data)
+                
+            if 'comment' in data:
+                v_name = sub_data["title"]
+                data = [[data["comment"]]]
+            elif 'data' in data:
+                v_name = data["title"]
+                data = [[data["data"]]]
+            else:
+                data = None
+        else:
+            data = curs.fetchall()
+            
         if data:
-            p_data += '<textarea readonly class="opennamu_textarea_500">' + html.escape(data[0][0]) + '</textarea>'
+            doc_preview = ''
+            if bbs_num == '' and post_num == '' and topic_num == '':
+                doc_preview = '''
+                    <textarea id="opennamu_editor_doc_name" style="display: none;">''' + html.escape(name) + '''</textarea>
+                    <button id="opennamu_preview_button" type="button" onclick="opennamu_do_editor_preview('raw');">''' + get_lang(conn, 'preview') + '''</button>
+                    <hr class="main_hr">
+                '''
+
+            p_data += '''
+                <div id="opennamu_preview_area">
+                    ''' + doc_preview + '''
+                    <textarea readonly id="opennamu_edit_textarea" class="opennamu_textarea_500">''' + html.escape(data[0][0]) + '''</textarea>
+                </div>
+            '''
             
             if doc_acl == 1:
                 p_data = '' + \
-                    load_lang('authority_error') + \
+                    get_lang(conn, 'authority_error') + \
                     '<hr class="main_hr">' + \
                     p_data
                 ''
-                sub = ' (' + load_lang('edit') + ')'
+                sub = ' (' + get_lang(conn, 'edit') + ')'
 
-            return easy_minify(flask.render_template(skin_check(),
-                imp = [v_name, wiki_set(), wiki_custom(), wiki_css([sub, 0])],
+            return easy_minify(conn, flask.render_template(skin_check(conn),
+                imp = [v_name, wiki_set(conn), wiki_custom(conn), wiki_css([sub, 0])],
                 data = p_data,
                 menu = menu
             ))
         else:
-            return re_error('/error/3')
+            return re_error(conn, '/error/3')

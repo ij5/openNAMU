@@ -26,6 +26,8 @@ input[type="checkbox"], input[type="radio"] {
 
 /* 테이블 */
 table {
+    overflow-x: scroll;
+
     border-collapse: collapse;
 }
 
@@ -43,14 +45,23 @@ td {
     }
 }
 
-summary {
+/* 폴딩 */
+details summary {
     cursor: pointer;
     user-select: none;
     
     display: list-item;
-    list-style: inside disclosure-closed;
 }
-    
+
+/* diff */
+.opennamu_diff_green {
+    background: #eaf2c2;
+}
+
+.opennamu_diff_red {
+    background: #fadad7;
+}
+
 /* list */
 .opennamu_ul {
     padding-left: 20px;
@@ -99,6 +110,8 @@ summary {
 
 .opennamu_comment_scroll {
     max-height: 500px;
+
+    white-space: pre-wrap;
     
     overflow: scroll;
     -ms-overflow-style: none;
@@ -170,10 +183,20 @@ a:hover {
 }
 
 /* - category */
-.opennamu_category {
+.opennamu_category, .opennamu_trace {
     border: 1px solid gainsboro;
     
     padding: 10px;
+    
+    white-space: pre;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+}
+
+.opennamu_category_button, .opennamu_trace_button {
+    float: right;
+    z-index: 100;
+    position: relative;
 }
 
 .opennamu_category_blur {
@@ -193,7 +216,7 @@ a:hover {
     margin-top: 10px;
 }
 
-pre, #redirect {
+pre, .opennamu_redirect {
     border: 1px solid gainsboro;
     
     padding: 10px;
@@ -240,17 +263,25 @@ code, pre {
 
     padding: 10px;
 
-    background-color: #efefef;
+    background-color: white;
+    color: initial;
     
     border: 1px solid #cecece;
+    border-radius: 5px;
 
     font-size: small;
     font-weight: initial;
 }
 
-@media ( max-width: 768px ) {
+@media(max-width: 768px) {
     .opennamu_popup_footnote {
         max-width: 100%;
+    }
+}
+
+@media(max-width: 420px) {
+    .table_safe {
+        float: none !important;
     }
 }
 
@@ -267,19 +298,21 @@ hr {
     display: inline;
 }
 
+.opennamu_render_complete img {
+    vertical-align: middle;
+}
+
 blockquote {
-    padding: 15px 40px 15px 15px;
+    padding: 15px;
+    
     margin: 0;
+    margin-top: 10px;
+    margin-bottom: 10px;
 
     display: inline-block;
 
     border: 2px solid #ccc;
     border-left: 5px solid black;
-
-    background-image: url('/views/main_css/file/quote.png');
-    background-position: calc(100% - 10px) 10px;
-    background-repeat: no-repeat;
-    background-size: 25px;
 }
 
 /* 취소선 */
@@ -358,10 +391,7 @@ s:hover, strike:hover, del:hover {
 }
 .katex {
     max-width: 100%;
-
-    display: inline-block;
-
-    overflow-x: scroll;
+    overflow-x: hidden;
     overflow-y: hidden;
 }
 
@@ -401,4 +431,25 @@ s:hover, strike:hover, del:hover {
     content: "⬥";
     width: 1.2em;
     margin-left: -1.2em;
+}
+
+.opennamu_list_none {
+    list-style: none;
+}
+
+.opennamu_folding {
+    margin-top: 10px;
+}
+
+.opennamu_recent_change {
+    padding: 10px;
+
+    border: 1px solid gainsboro;
+    
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 이 부분 이하로는 레거시 */
+#topic_color {
+    background: #bbeabb;
 }

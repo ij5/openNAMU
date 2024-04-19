@@ -7,15 +7,14 @@ def list_admin_auth_use(arg_num = 1, arg_search = 'normal'):
         sql_num = (arg_num * 50 - 50) if arg_num * 50 > 0 else 0
 
         if flask.request.method == 'POST':
-            return redirect('/list/admin/auth_use/' + url_pas(flask.request.form.get('search', 'normal')) + '/1')
+            return redirect(conn, '/list/admin/auth_use_page/1/' + url_pas(flask.request.form.get('search', 'normal')))
         else:
+            arg_search = 'normal' if arg_search == '' else arg_search
+            
             if arg_search == 'normal':
                 curs.execute(db_change("select who, what, time from re_admin order by time desc limit ?, 50"), [sql_num])
             else:
-                curs.execute(
-                    db_change("select who, what, time from re_admin where what like ? order by time desc limit ?, 50"),
-                    [arg_search + "%", sql_num]
-                )
+                curs.execute(db_change("select who, what, time from re_admin where what like ? order by time desc limit ?, 50"), [arg_search + "%", sql_num])
 
             list_data = '<ul class="opennamu_ul">'
 
@@ -23,28 +22,28 @@ def list_admin_auth_use(arg_num = 1, arg_search = 'normal'):
             for data in get_list:
                 do_data = data[1]
 
-                if ip_pas('127.0.0.1', 1) != '127.0.0.1': 
+                if ip_pas(conn, '127.0.0.1', 1) != '127.0.0.1': 
                     do_data = do_data.split(' ')
                     if do_data[0] in ('ban'):
                         do_data = do_data[0]
                     else:
                         do_data = data[1]
 
-                list_data += '<li>' + ip_pas(data[0]) + ' | ' + html.escape(do_data) + ' | ' + data[2] + '</li>'
+                list_data += '<li>' + ip_pas(conn, data[0]) + ' | ' + html.escape(do_data) + ' | ' + data[2] + '</li>'
 
             list_data += '</ul>'
-            list_data += next_fix('/list/admin/auth_use/' + url_pas(arg_search) + '/', arg_num, get_list)
+            list_data += get_next_page_bottom(conn, '/list/admin/auth_use_page/{}/' + url_pas(arg_search), arg_num, get_list)
 
             arg_search = html.escape(arg_search) if arg_search != 'normal' else ''
 
-            return easy_minify(flask.render_template(skin_check(),
-                imp = [load_lang('authority_use_list'), wiki_set(), wiki_custom(), wiki_css([0, 0])],
+            return easy_minify(conn, flask.render_template(skin_check(conn),
+                imp = [get_lang(conn, 'authority_use_list'), wiki_set(conn), wiki_custom(conn), wiki_css([0, 0])],
                 data = '''
                     <form method="post">
-                        <input class="opennamu_width_200" name="search" value="''' + arg_search + '''">
-                        <button type="submit">''' + load_lang('search') + '''</button>
+                        <input class="opennamu_width_200" name="search" placeholder="''' + get_lang(conn, 'start_with_search') + '''" value="''' + arg_search + '''">
+                        <button type="submit">''' + get_lang(conn, 'search') + '''</button>
                     </form>
                     <hr class="main_hr">
                 ''' + list_data,
-                menu = [['other', load_lang('return')]]
+                menu = [['other', get_lang(conn, 'return')]]
             ))

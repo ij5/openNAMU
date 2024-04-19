@@ -6,13 +6,9 @@ def list_please(arg_num = 1):
 
         sql_num = (arg_num * 50 - 50) if arg_num * 50 > 0 else 0
 
-        curs.execute(db_change('select data from other where name = "count_all_title"'))
-        if int(curs.fetchall()[0][0]) > 30000:
-            return re_error('/error/25')
-
         div = '<ul class="opennamu_ul">'
 
-        curs.execute(db_change("select distinct title, link from back where type = 'no' order by title asc limit ?, 50"), [sql_num])
+        curs.execute(db_change("select distinct title, link from back where type = 'no' limit ?, 50"), [sql_num])
         data_list = curs.fetchall()
         for data in data_list:
             div += '' + \
@@ -22,10 +18,10 @@ def list_please(arg_num = 1):
                 '</li>' + \
             ''
 
-        div += '</ul>' + next_fix('/list/document/need/', arg_num, data_list)
+        div += '</ul>' + next_fix(conn, '/list/document/need/', arg_num, data_list)
 
-        return easy_minify(flask.render_template(skin_check(),
-            imp = [load_lang('need_document'), wiki_set(), wiki_custom(), wiki_css([0, 0])],
+        return easy_minify(conn, flask.render_template(skin_check(conn),
+            imp = [get_lang(conn, 'need_document'), wiki_set(conn), wiki_custom(conn), wiki_css([0, 0])],
             data = div,
-            menu = [['other', load_lang('return')]]
+            menu = [['other', get_lang(conn, 'return')]]
         ))

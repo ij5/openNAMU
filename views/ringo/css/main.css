@@ -5,6 +5,7 @@ html {
 body {
     font-family: 'SUIT', sans-serif;
     font-size: 14px;
+    font-feature-settings: "ss18";
 
     margin: 0;
 }
@@ -17,10 +18,12 @@ h1, h2, h3, h4, h5, h6 {
 
 select {
     font-family: 'SUIT', sans-serif;
+    font-feature-settings: "ss18";
 }
 
 textarea {
     font-family: 'SUIT', monospace;
+    font-feature-settings: "ss18";
 }
 
 h1.blank, h2.blank, h3.blank, h4.blank, h5.blank, h6.blank {
@@ -192,8 +195,6 @@ button.search_button#search:hover {
 aside {
     width: 250px;
     
-    float: left;
-    
     display: block;
     
     padding-top: 10px;
@@ -202,7 +203,19 @@ aside {
     
     background-color: #ffeaee;
     
-    min-height: calc(100vh - (50px + 20px));
+    min-height: calc(100vh - (50px + 12px));
+}
+
+.aside_width {
+    width: 290px;
+
+    float: left;
+}
+
+.do_fixed {
+    position: fixed;
+    
+    top: 52px;
 }
 
 aside button {
@@ -214,6 +227,9 @@ aside .side_button {
     background-color: white;
     
     padding: 10px;
+
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 aside .side_button:hover {
@@ -271,6 +287,8 @@ article.main#main_data {
 
 article.main#title h1 {
     margin: 0;
+
+    font-size: 32px;
 }
 
 .only_mobile, header#main form.only_mobile {
@@ -310,6 +328,14 @@ article.main#title h1 {
 
         width: 100%;
     }
+
+    .do_fixed {
+        position: inherit;
+    }
+
+    .aside_width {
+        display: none;
+    }
 }
 
 footer {
@@ -335,6 +361,10 @@ input, textarea, button, select {
     padding: 10px;
     
     background-color: white;
+}
+
+input, textarea {
+    width: calc(100% - 20px);
 }
 
 #main_data button:hover {
@@ -409,4 +439,8 @@ body {
 
 #nav_bar a {
     color: black;
+}
+
+pre#syntax, pre#syntax code {
+    border: 0;
 }
