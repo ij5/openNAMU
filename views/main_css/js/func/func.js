@@ -43,8 +43,8 @@ const postprocessing = ()=>{
                     tooltip.style.width = window.innerWidth + 'px';
                     tooltip.style.left = '0px';
                 }
-                return;
             }
+            return false;
         })
     }
 
