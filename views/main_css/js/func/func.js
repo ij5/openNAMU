@@ -2,7 +2,7 @@
 
 let doubleclick = false;
 
-document.addEventListener('DOMContentLoaded', ()=>{
+const postprocessing = ()=>{
     let tooltip = document.createElement('span');
     tooltip.classList.add('tooltip');
     tooltip.style.display = 'none';
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
             })
         })
     }
-})
+}
 
 function opennamu_xss_filter(str) {
     return str.replace(/[&<>"']/g, function(match) {
@@ -201,6 +201,7 @@ function opennamu_do_render(to_obj, data, name = '', do_type = '', option = '') 
             } else {
                 document.getElementById(to_obj).innerHTML = '';
             }
+            postprocessing();
         }
     });
 }
